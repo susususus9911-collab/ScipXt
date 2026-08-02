@@ -1,0 +1,981 @@
+-- ================================================
+-- ♣️ ALL MENU BY KRAN (RGB Dynamic Border & Carbon Fiber BG Edition)
+-- 💎 Key System + WindUI + Fast Bright RGB Gradient Loop
+-- ================================================
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+local SoundService = game:GetService("SoundService")
+local UserInputService = game:GetService("UserInputService")
+local Lighting = game:GetService("Lighting")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local Camera = workspace.CurrentCamera
+
+local ParentGui = (CoreGui:FindFirstChild("RobloxGui") and CoreGui) or PlayerGui
+
+-- ------------------------------------------------
+-- 🎨 1. ตั้งค่าระบบไฟ RGB (เริ่มต้นวิ่งวนเร็วทันที + สีสดสว่าง)
+-- ------------------------------------------------
+local RGB_Config = {
+    Speed = 6,          -- ความเร็วเริ่มต้น (วิ่งเร็วตั้งแต่กดรันแรกๆ)
+    Size = 3,           -- ความหนาเส้นขอบ
+    Mode = "Rainbow"    -- โหมดสี: "Rainbow", "Orange", "Green", "Cyan", "Red", "Purple", "Gold", "Pink", "IceBlue", "White"
+}
+
+-- ฟังก์ชั่นสร้าง Gradient สว่างชัดเจนแบบวิ่งวนหมุนรอบ
+local function UpdateGradientColors(gradient, offset)
+    local mode = RGB_Config.Mode
+    
+    if mode == "Rainbow" then
+        gradient.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromHSV((offset) % 1, 1, 1)),
+            ColorSequenceKeypoint.new(0.25, Color3.fromHSV((offset + 0.25) % 1, 1, 1)),
+            ColorSequenceKeypoint.new(0.5, Color3.fromHSV((offset + 0.5) % 1, 1, 1)),
+            ColorSequenceKeypoint.new(0.75, Color3.fromHSV((offset + 0.75) % 1, 1, 1)),
+            ColorSequenceKeypoint.new(1, Color3.fromHSV((offset + 1) % 1, 1, 1))
+        })
+    else
+        local baseColor = Color3.fromRGB(255, 255, 255)
+        if mode == "Orange" then baseColor = Color3.fromRGB(255, 130, 0)
+        elseif mode == "Green" then baseColor = Color3.fromRGB(0, 255, 120)
+        elseif mode == "Cyan" then baseColor = Color3.fromRGB(0, 220, 255)
+        elseif mode == "Red" then baseColor = Color3.fromRGB(255, 40, 40)
+        elseif mode == "Purple" then baseColor = Color3.fromRGB(180, 50, 255)
+        elseif mode == "Gold" then baseColor = Color3.fromRGB(255, 215, 0)
+        elseif mode == "Pink" then baseColor = Color3.fromRGB(255, 20, 147)
+        elseif mode == "IceBlue" then baseColor = Color3.fromRGB(135, 206, 250)
+        elseif mode == "White" then baseColor = Color3.fromRGB(240, 240, 255)
+        end
+        
+        gradient.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, baseColor),
+            ColorSequenceKeypoint.new(0.3, Color3.fromRGB(20, 20, 28)),
+            ColorSequenceKeypoint.new(0.7, Color3.fromRGB(20, 20, 28)),
+            ColorSequenceKeypoint.new(1, baseColor)
+        })
+    end
+end
+
+-- ------------------------------------------------
+-- 🔊 2. ระบบเสียงกดปุ่มคีย์บอร์ด
+-- ------------------------------------------------
+if SoundService:FindFirstChild("KranClickSound") then
+    SoundService.KranClickSound:Destroy()
+end
+
+local ClickSound = Instance.new("Sound")
+ClickSound.Name = "KranClickSound"
+ClickSound.SoundId = "rbxassetid://6895079853"
+ClickSound.Volume = 1
+ClickSound.Parent = SoundService
+
+local function PlayClickSound()
+    task.spawn(function()
+        ClickSound:Play()
+    end)
+end
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        if gameProcessed then
+            PlayClickSound()
+        end
+    end
+end)
+
+local function PlaySoundOnButton(btn)
+    if (btn:IsA("TextButton") or btn:IsA("ImageButton")) and not btn:GetAttribute("SoundHooked") then
+        btn:SetAttribute("SoundHooked", true)
+        btn.MouseButton1Click:Connect(PlayClickSound)
+    end
+end
+
+local function HookContainerSound(container)
+    if not container then return end
+    for _, desc in pairs(container:GetDescendants()) do
+        PlaySoundOnButton(desc)
+    end
+    container.DescendantAdded:Connect(PlaySoundOnButton)
+end
+
+HookContainerSound(ParentGui)
+
+-- ------------------------------------------------
+-- 🖼️ ระบบดักจับกรอบ UI หลัก + ใส่ไฟขอบ RGB & ลาย Carbon
+-- ------------------------------------------------
+local function ApplyCarbonAndStrokeToUI()
+    for _, gui in pairs(ParentGui:GetChildren()) do
+        if gui:IsA("ScreenGui") and (gui.Name:find("WindUI") or gui.Name:find("Wind") or gui:FindFirstChild("Main") or gui:FindFirstChild("Canvas")) then
+            for _, frame in pairs(gui:GetDescendants()) do
+                if frame:IsA("Frame") and frame.AbsoluteSize.X > 250 and frame.AbsoluteSize.Y > 200 then
+                    frame.ClipsDescendants = true
+                    
+                    -- พื้นหลัง Carbon Fiber
+                    if not frame:FindFirstChild("KranCarbonBG") then
+                        local carbonBG = Instance.new("ImageLabel")
+                        carbonBG.Name = "KranCarbonBG"
+                        carbonBG.Size = UDim2.new(1, 0, 1, 0)
+                        carbonBG.Position = UDim2.new(0, 0, 0, 0)
+                        carbonBG.BackgroundTransparency = 1
+                        carbonBG.Image = "rbxassetid://13110363236" 
+                        carbonBG.ScaleType = Enum.ScaleType.Crop
+                        carbonBG.ImageTransparency = 0.45
+                        carbonBG.ZIndex = 0
+                        carbonBG.Parent = frame
+                    end
+
+                    -- กรอบไฟ RGB
+                    local mainStroke = frame:FindFirstChild("KranMainStroke")
+                    if not mainStroke then
+                        mainStroke = Instance.new("UIStroke")
+                        mainStroke.Name = "KranMainStroke"
+                        mainStroke.Thickness = RGB_Config.Size
+                        mainStroke.Color = Color3.fromRGB(255, 255, 255)
+                        mainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                        mainStroke.Parent = frame
+                        
+                        local mainGrad = Instance.new("UIGradient")
+                        mainGrad.Name = "KranMainGradient"
+                        mainGrad.Parent = mainStroke
+                    end
+                end
+            end
+        end
+    end
+end
+
+-- ------------------------------------------------
+-- ♣️ 3. ปุ่มลอยทรงกลม (ปุ่ม ♣️) + RGB Gradient Border
+-- ------------------------------------------------
+if ParentGui:FindFirstChild("KranToggleGui") then
+    ParentGui.KranToggleGui:Destroy()
+end
+
+local ToggleGui = Instance.new("ScreenGui")
+ToggleGui.Name = "KranToggleGui"
+ToggleGui.Parent = ParentGui
+
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Name = "ToggleBtn"
+ToggleBtn.Parent = ToggleGui
+ToggleBtn.Size = UDim2.fromOffset(50, 50)
+ToggleBtn.Position = UDim2.new(0, 15, 0.4, 0)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(16, 16, 20)
+ToggleBtn.Text = "♣️"
+ToggleBtn.TextSize = 24
+ToggleBtn.Font = Enum.Font.GothamBold
+ToggleBtn.Active = true
+ToggleBtn.Draggable = true
+
+local UICornerToggle = Instance.new("UICorner")
+UICornerToggle.CornerRadius = UDim.new(1, 0)
+UICornerToggle.Parent = ToggleBtn
+
+local UIStrokeToggle = Instance.new("UIStroke")
+UIStrokeToggle.Name = "UIStrokeToggle"
+UIStrokeToggle.Thickness = RGB_Config.Size
+UIStrokeToggle.Color = Color3.fromRGB(255, 255, 255)
+UIStrokeToggle.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+UIStrokeToggle.Parent = ToggleBtn
+
+local ToggleGradient = Instance.new("UIGradient")
+ToggleGradient.Name = "ToggleGradient"
+ToggleGradient.Parent = UIStrokeToggle
+
+HookContainerSound(ToggleGui)
+
+-- ------------------------------------------------
+-- 📦 4. หน้าต่างเมนู ESP ข้างจอ + RGB Gradient Border
+-- ------------------------------------------------
+if ParentGui:FindFirstChild("KranEspMenuFrame") then
+    ParentGui.KranEspMenuFrame:Destroy()
+end
+
+local EspScreenGui = Instance.new("ScreenGui")
+EspScreenGui.Name = "KranEspMenuFrame"
+EspScreenGui.Parent = ParentGui
+EspScreenGui.Enabled = false
+
+local EspMainFrame = Instance.new("Frame")
+EspMainFrame.Name = "EspMainFrame"
+EspMainFrame.Parent = EspScreenGui
+EspMainFrame.Size = UDim2.fromOffset(230, 310)
+EspMainFrame.Position = UDim2.new(0.02, 0, 0.2, 0)
+EspMainFrame.BackgroundColor3 = Color3.fromRGB(16, 16, 20)
+EspMainFrame.Active = true
+EspMainFrame.Draggable = true
+
+local EspCorner = Instance.new("UICorner")
+EspCorner.CornerRadius = UDim.new(0, 22)
+EspCorner.Parent = EspMainFrame
+
+local EspUIStroke = Instance.new("UIStroke")
+EspUIStroke.Name = "EspUIStroke"
+EspUIStroke.Thickness = RGB_Config.Size
+EspUIStroke.Color = Color3.fromRGB(255, 255, 255)
+EspUIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+EspUIStroke.Parent = EspMainFrame
+
+local EspGradient = Instance.new("UIGradient")
+EspGradient.Name = "EspGradient"
+EspGradient.Parent = EspUIStroke
+
+local EspTitle = Instance.new("TextLabel")
+EspTitle.Parent = EspMainFrame
+EspTitle.Size = UDim2.new(1, 0, 0, 38)
+EspTitle.Text = "✨ RGB ESP MENU ✨"
+EspTitle.TextColor3 = Color3.fromRGB(242, 242, 245)
+EspTitle.TextSize = 12
+EspTitle.Font = Enum.Font.GothamBold
+EspTitle.BackgroundColor3 = Color3.fromRGB(24, 24, 32)
+EspTitle.BorderSizePixel = 0
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 22)
+TitleCorner.Parent = EspTitle
+
+local Box_Enabled = false
+local Highlight_Enabled = false
+local Tracers_Enabled = false
+local Hitbox_Enabled = false
+local ESP_Objects = {}
+
+local function CreateEspButton(text, pos, callback)
+    local Btn = Instance.new("TextButton")
+    Btn.Parent = EspMainFrame
+    Btn.Size = UDim2.new(0.9, 0, 0, 32)
+    Btn.Position = pos
+    Btn.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
+    Btn.Text = text
+    Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Btn.TextSize = 11
+    Btn.Font = Enum.Font.GothamMedium
+
+    local BtnCorner = Instance.new("UICorner")
+    BtnCorner.CornerRadius = UDim.new(0, 10)
+    BtnCorner.Parent = Btn
+
+    Btn.MouseButton1Click:Connect(function() callback(Btn) end)
+    return Btn
+end
+
+CreateEspButton("📦 กรอบ 2D Box: OFF 🔴", UDim2.new(0.05, 0, 0.16, 0), function(btn)
+    Box_Enabled = not Box_Enabled
+    btn.Text = Box_Enabled and "📦 กรอบ 2D Box: ON 🟢" or "📦 กรอบ 2D Box: OFF 🔴"
+end)
+
+CreateEspButton("✨ Highlight เรืองแสง: OFF 🔴", UDim2.new(0.05, 0, 0.29, 0), function(btn)
+    Highlight_Enabled = not Highlight_Enabled
+    btn.Text = Highlight_Enabled and "✨ Highlight เรืองแสง: ON 🟢" or "✨ Highlight เรืองแสง: OFF 🔴"
+end)
+
+CreateEspButton("🌈 เส้นสีรุ้ง Tracers: OFF 🔴", UDim2.new(0.05, 0, 0.42, 0), function(btn)
+    Tracers_Enabled = not Tracers_Enabled
+    btn.Text = Tracers_Enabled and "🌈 เส้นสีรุ้ง Tracers: ON 🟢" or "🌈 เส้นสีรุ้ง Tracers: OFF 🔴"
+end)
+
+CreateEspButton("🎯 Hitbox ใหญ่ขึ้น: OFF 🔴", UDim2.new(0.05, 0, 0.55, 0), function(btn)
+    Hitbox_Enabled = not Hitbox_Enabled
+    btn.Text = Hitbox_Enabled and "🎯 Hitbox ใหญ่ขึ้น: ON 🟢" or "🎯 Hitbox ใหญ่ขึ้น: OFF 🔴"
+end)
+
+CreateEspButton("❌ ซ่อนเมนู ESP นี้", UDim2.new(0.05, 0, 0.82, 0), function()
+    EspScreenGui.Enabled = false
+end)
+
+HookContainerSound(EspScreenGui)
+
+-- ------------------------------------------------
+-- 🚀 5. โหลด WindUI + ระบบ Key (ใช้ลิงก์ Linkvertise ของน้อง)
+-- ------------------------------------------------
+local WindUI = nil
+
+local success, _ = pcall(function()
+    WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+end)
+
+if not success or not WindUI then
+    pcall(function()
+        WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
+    end)
+end
+
+if not WindUI then
+    warn("❌ ไม่สามารถโหลด WindUI ได้!")
+    return
+end
+
+-- 🔑 ลิงก์ Linkvertise ของน้อง (ไม่เฉลยรหัสผ่านใน Note แล้ว)
+local KEY_LINK = "https://direct-link.net/8028530/zKIyozURubdX" 
+
+local Window = WindUI:CreateWindow({
+    Title = "all menu By Kran",
+    Icon = "crown",
+    Author = "By Kran",
+    Folder = "KranMenuConfig",
+    Size = UDim2.fromOffset(580, 460),
+    Transparent = true,
+    Theme = "Dark",
+    Resizable = true,
+    SideBarWidth = 200,
+    Background = "", 
+    BackgroundImageTransparency = 0.42,
+    HideSearchBar = true,
+    ScrollBarEnabled = false,
+    User = {
+        Enabled = true,
+        Anonymous = false,
+        Callback = function()
+            print("clicked profile")
+        end
+    },
+    KeySystem = {
+        Key = { "006700", "🤡" },
+        Note = "🔑 กรุณากดปุ่ม Get Key ด้านล่างเพื่อรับรหัสผ่านผ่านลิงก์ไม่ก็ถามผู้สร้าง", -- ไมโครโฟนปิดไม่ให้เห็นรหัสตรงนี้แล้ว
+        Thumbnail = {
+            Image = "rbxassetid://",
+            Title = "Key System By Kran",
+        },
+        URL = KEY_LINK,
+        SaveKey = false,
+    }
+})
+
+task.spawn(function()
+    task.wait(0.5)
+    ApplyCarbonAndStrokeToUI()
+end)
+
+pcall(function()
+    local userAvatarUrl = "rbxthumb://type=AvatarHeadShot&id=" .. LocalPlayer.UserId .. "&w=150&h=150"
+    if Window.User then
+        Window:User({
+            Name = LocalPlayer.DisplayName,
+            Title = "@" .. LocalPlayer.Name,
+            Icon = userAvatarUrl
+        })
+    end
+end)
+
+ToggleBtn.MouseButton1Click:Connect(function()
+    pcall(function()
+        if Window.Toggle then
+            Window:Toggle()
+        else
+            Window:Minimize()
+        end
+    end)
+end)
+
+ParentGui.ChildAdded:Connect(function(child)
+    if child:IsA("ScreenGui") then
+        HookContainerSound(child)
+        task.wait(0.2)
+        ApplyCarbonAndStrokeToUI()
+    end
+end)
+
+-- ------------------------------------------------
+-- 📑 6. สร้างแท็บเมนู (WindUI Tabs)
+-- ------------------------------------------------
+local Tabs = {
+    Profile      = Window:Tab({ Title = "โปรไฟล์ VIP", Icon = "contact" }),
+    Main         = Window:Tab({ Title = "ฟีเจอร์หลัก", Icon = "code" }),
+    Player       = Window:Tab({ Title = "ตัวละคร & เคลื่อนที่", Icon = "user" }),
+    AllUniversal = Window:Tab({ Title = "ล็อคเป้า & ESP", Icon = "layers" }),
+    Visuals      = Window:Tab({ Title = "วิชวลการเล่น", Icon = "eye" }),
+    AllGames     = Window:Tab({ Title = "รวมแมพฮิต", Icon = "gamepad-2" }),
+    Settings     = Window:Tab({ Title = "ตั้งค่าระบบ", Icon = "settings" })
+}
+
+-- 📌 แท็บ 1: โปรไฟล์ VIP
+Tabs.Profile:Section({ Title = "👑 ข้อมูลผู้ใช้งาน" })
+Tabs.Profile:Paragraph({
+    Title = "🔥 ผู้ใช้: " .. LocalPlayer.DisplayName,
+    Desc = "📌 Username: @" .. LocalPlayer.Name ..
+           "\n🆔 User ID: " .. LocalPlayer.UserId .. 
+           "\n📅 อายุบัญชี: " .. LocalPlayer.AccountAge .. " วัน"
+})
+
+Tabs.Profile:Button({
+    Title = "📋 คัดลอก User ID",
+    Callback = function() setclipboard(tostring(LocalPlayer.UserId)) end
+})
+
+-- 📌 แท็บ 2: ฟีเจอร์หลัก
+Tabs.Main:Section({ Title = "👑 สคริปต์หลัก" })
+
+Tabs.Main:Button({
+    Title = "🔥 Tora Isme Hub [BETA]",
+    Desc = "รันสคริปต์ Tora Isme Hub (สคริปต์ใหม่ล่าสุด)",
+    Callback = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/boplsme/Scripts-/refs/heads/main/%5BBETA%5D%20Tora%20Isme%20Hub.txt"))() end
+})
+
+Tabs.Main:Button({
+    Title = "👑 Main GUI 2 (Wack Shop)",
+    Desc = "รันสคริปต์ Main GUI 2",
+    Callback = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/wackshopr-tech/script-roblox-all/refs/heads/main/Main-GUI-2.lua", true))() end
+})
+
+Tabs.Main:Button({
+    Title = "👑 รันสคริปต์ VIP (RVX V2)",
+    Desc = "เปิดใช้งานสคริปต์หลัก RVX V2",
+    Callback = function() loadstring(game:HttpGet("https://rvxv2-production-c788.up.railway.app/vip", true))() end
+})
+
+Tabs.Main:Button({
+    Title = "🛠️ สคริปต์แก้ไขระบบ (Correct)",
+    Desc = "รันสคริปต์แก้ไขจาก Wack Shop",
+    Callback = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/wackshopr-tech/script-roblox-all/refs/heads/main/SCRIPT-ALL-BY-WACK-SHOP/correct/correct.lua", true))() end
+})
+
+Tabs.Main:Button({
+    Title = "🖱️ OP Auto Clicker (ออโต้คลิก)",
+    Callback = function() loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-OP-autoclicker-21838"))() end
+})
+
+-- 📌 แท็บ 3: ตัวละคร & เคลื่อนที่
+Tabs.Player:Section({ Title = "🛡️ โหมดอมตะ & ป้องกันตัว" })
+
+local GodModeEnabled = false
+
+Tabs.Player:Toggle({
+    Title = "🛡️ เปิดใช้งาน God Mode (โหมดอมตะ)",
+    Desc = "ยิงไม่ตาย / ล็อกเลือดเต็มตลอดเวลา / ป้องกันการตาย",
+    Value = false,
+    Callback = function(Value)
+        GodModeEnabled = Value
+        if GodModeEnabled then
+            task.spawn(function()
+                while GodModeEnabled do
+                    task.wait()
+                    pcall(function()
+                        local char = LocalPlayer.Character
+                        if char then
+                            local hum = char:FindFirstChildOfClass("Humanoid")
+                            if hum then
+                                hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+                                if hum.Health < hum.MaxHealth and hum.Health > 0 then
+                                    hum.Health = hum.MaxHealth
+                                end
+                            end
+                        end
+                    end)
+                end
+            end)
+        else
+            pcall(function()
+                local char = LocalPlayer.Character
+                if char then
+                    local hum = char:FindFirstChildOfClass("Humanoid")
+                    if hum then
+                        hum:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+                    end
+                end
+            end)
+        end
+    end
+})
+
+Tabs.Player:Button({
+    Title = "⚡ God Mode Bypass (สูตรอมตะถาวร)",
+    Desc = "สลับ Humanoid เพื่อสร้างร่างอมตะ (กด 1 ครั้ง)",
+    Callback = function()
+        pcall(function()
+            local char = LocalPlayer.Character
+            if char then
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                if hum then
+                    local clonedHum = hum:Clone()
+                    clonedHum.Parent = char
+                    hum:Destroy()
+                    Camera.CameraSubject = char
+                end
+            end
+        end)
+    end
+})
+
+Tabs.Player:Section({ Title = "🕊️ การเคลื่อนที่" })
+
+Tabs.Player:Button({
+    Title = "1. Fly GUI (สคริปต์บิน)",
+    Callback = function() loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Vencible-fly-gui-R15-210034"))() end
+})
+
+Tabs.Player:Button({
+    Title = "2. Auto Wallhop (ไต่กำแพง)",
+    Callback = function() loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-VXH-auto-wallhop-42751"))() end
+})
+
+Tabs.Player:Button({
+    Title = "3. Shiftlock Mobile",
+    Callback = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/MiniAssasin/Shiftlock/main/ShiftlockMobile.lua"))() end
+})
+
+Tabs.Player:Section({ Title = "👻 พรางตัว & ป่วน" })
+
+Tabs.Player:Button({
+    Title = "4. FE Invisible (สคริปต์ล่องหน)",
+    Callback = function() loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Fe-Invisible-56490"))() end
+})
+
+Tabs.Player:Button({
+    Title = "5. UFGUI (สคริปต์ Fling ชนปลิว)",
+    Callback = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/sypcerr/scripts/refs/heads/main/UFGUI", true))() end
+})
+
+Tabs.Player:Button({
+    Title = "6. FE All Emotes (ท่าทางฟรี)",
+    Callback = function() loadstring(game:HttpGet("https://kei-scripts.vercel.app/raw/9677ab5f-49d7-42e7-be9f-bc09e13d1b85"))() end
+})
+
+-- 📌 แท็บ 4: ล็อคเป้า & ESP
+Tabs.AllUniversal:Section({ Title = "👑 คำสั่งแอดมิน" })
+
+Tabs.AllUniversal:Button({
+    Title = "1. Infinite Yield (Admin Commands)",
+    Callback = function() loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))() end
+})
+
+Tabs.AllUniversal:Section({ Title = "👁️ ระบบ ESP & ล็อคหัว" })
+
+Tabs.AllUniversal:Button({
+    Title = "🌈 เปิด / ปิด หน้าต่างเมนู ESP",
+    Desc = "เปิดหน้าต่างเมนูควบคุม ESP ข้างจอ",
+    Callback = function() EspScreenGui.Enabled = not EspScreenGui.Enabled end
+})
+
+Tabs.AllUniversal:Button({
+    Title = "👁️ ESP / ล็อคหัว V1",
+    Desc = "สคริปต์ ESP และล็อคหัว เวอร์ชั่น 1",
+    Callback = function() loadstring(game:HttpGet("https://gist.githubusercontent.com/djuka843/29b1f2f70d72a8ac1f4be782cb198ca7/raw/ea00160d8be826e0922efa2f2320930bb18592e7/gistfile1.txt"))() end
+})
+
+Tabs.AllUniversal:Button({
+    Title = "🔥 ESP / ล็อคหัว V2 (ใหม่)",
+    Desc = "สคริปต์ ESP และล็อคหัว เวอร์ชั่น 2",
+    Callback = function() loadstring(game:HttpGet("https://pastebin.com/raw/emvEDTNB"))() end
+})
+
+Tabs.AllUniversal:Section({ Title = "🎯 ระบบ Aimbot (ล็อคเป้า)" })
+
+Tabs.AllUniversal:Button({
+    Title = "Universal Silent Aim",
+    Callback = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AimbotScript/SilentAim/main/Script.lua"))() end
+})
+
+-- 📌 แท็บ 5: วิชวลการเล่น
+Tabs.Visuals:Section({ Title = "💡 ความสว่าง & บรรยากาศ" })
+
+local FullbrightEnabled = false
+local OldBrightness = Lighting.Brightness
+local OldClockTime = Lighting.ClockTime
+local OldFogEnd = Lighting.FogEnd
+local OldGlobalShadows = Lighting.GlobalShadows
+local OldAmbient = Lighting.Ambient
+
+Tabs.Visuals:Toggle({
+    Title = "☀️ มองเห็นสว่างในที่มืด (Fullbright)",
+    Value = false,
+    Callback = function(Value)
+        FullbrightEnabled = Value
+        if FullbrightEnabled then
+            Lighting.Brightness = 2
+            Lighting.ClockTime = 14
+            Lighting.FogEnd = 100000
+            Lighting.GlobalShadows = false
+            Lighting.Ambient = Color3.fromRGB(255, 255, 255)
+        else
+            Lighting.Brightness = OldBrightness
+            Lighting.ClockTime = OldClockTime
+            Lighting.FogEnd = OldFogEnd
+            Lighting.GlobalShadows = OldGlobalShadows
+            Lighting.Ambient = OldAmbient
+        end
+    end
+})
+
+Tabs.Visuals:Button({
+    Title = "⚡ ปรับความลื่นไหล (FPS Boost / ลดกราฟิก)",
+    Desc = "ลบเงาและลบรายละเอียดฉากช่วยเพิ่ม FPS ให้ลื่นขึ้น",
+    Callback = function()
+        pcall(function()
+            Lighting.GlobalShadows = false
+            Lighting.FogEnd = 9e9
+            for _, v in pairs(workspace:GetDescendants()) do
+                if v:IsA("BasePart") then
+                    v.Material = Enum.Material.SmoothPlastic
+                elseif v:IsA("Decal") or v:IsA("Texture") then
+                    v:Destroy()
+                elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
+                    v.Enabled = false
+                end
+            end
+        end)
+    end
+})
+
+Tabs.Visuals:Section({ Title = "🌀 ฟังก์ชั่นวาร์ป & หมุนตัว" })
+
+local SpinbotEnabled = false
+Tabs.Visuals:Toggle({
+    Title = "1. เปิดระบบ Spinbot (หมุนตัว 360°)",
+    Value = false,
+    Callback = function(Value) SpinbotEnabled = Value end
+})
+
+task.spawn(function()
+    while task.wait() do
+        if SpinbotEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            LocalPlayer.Character.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(50), 0)
+        end
+    end
+end)
+
+local ClickTPEnabled = false
+Tabs.Visuals:Toggle({
+    Title = "2. เปิดระบบ Click TP (แตะจอกดวาร์ป)",
+    Value = false,
+    Callback = function(Value) ClickTPEnabled = Value end
+})
+
+LocalPlayer:GetMouse().Button1Down:Connect(function()
+    if ClickTPEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(LocalPlayer:GetMouse().Hit.Position + Vector3.new(0, 3, 0))
+    end
+end)
+
+-- 📌 แท็บ 6: รวมแมพฮิต
+Tabs.AllGames:Section({ Title = "🎮 เลือกรวมแมพฮิต" })
+
+local SelectedGameScript = "Blox Fruits - Redz Hub"
+Tabs.AllGames:Dropdown({
+    Title = "เลือกสคริปต์แมพที่ต้องการรัน",
+    Values = {"Blox Fruits - Redz Hub", "Blade Ball - Auto Parry", "Fisch - Speed Hub"},
+    Value = "Blox Fruits - Redz Hub",
+    Callback = function(Value) SelectedGameScript = Value end
+})
+
+Tabs.AllGames:Button({
+    Title = "🚀 กดเพื่อรันสคริปต์แมพที่เลือกไว้",
+    Callback = function()
+        if SelectedGameScript == "Blox Fruits - Redz Hub" then
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/realredz/BloxFruits/main/Source.lua"))()
+        elseif SelectedGameScript == "Blade Ball - Auto Parry" then
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/3345-c-a-t-s-u-s/-Pro2/main/blade"))()
+        elseif SelectedGameScript == "Fisch - Speed Hub" then
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/AhmadDark/Speed-Hub-X/main/Speed%20Hub%20X.lua"))()
+        end
+    end
+})
+
+-- 📌 แท็บ 7: ตั้งค่าระบบ
+Tabs.Settings:Section({ Title = "🔑 ระบบ Key" })
+
+Tabs.Settings:Button({
+    Title = "📋 คัดลอกลิ้งค์รับคีย์ (Get Key Link)",
+    Desc = "คัดลอกลิ้งค์รับคีย์ลง ClipBoard",
+    Callback = function()
+        setclipboard(KEY_LINK)
+        WindUI:Notify({
+            Title = "🔑 Get Key Link",
+            Content = "คัดลอกลิ้งค์รับคีย์เรียบร้อยแล้ว!",
+            Duration = 2
+        })
+    end
+})
+
+Tabs.Settings:Section({ Title = "🤪 สายเรื้อน (Troll & Annoying)" })
+
+Tabs.Settings:Button({
+    Title = "👻 UFGUI (สคริปต์ Fling ชนปลิว)",
+    Desc = "เปิดใช้งานสคริปต์ Fling ชนผู้เล่นคนอื่นปลิว",
+    Callback = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/sypcerr/scripts/refs/heads/main/UFGUI", true))() end
+})
+
+Tabs.Settings:Button({
+    Title = "🥵 Kei Hot Special Script",
+    Desc = "รันสคริปต์พิเศษ Kei Hot",
+    Callback = function() loadstring(game:HttpGet("https://kei-scripts.vercel.app/raw/6bed0a68-5ac7-4025-a269-422087fa024f"))() end
+})
+
+Tabs.Settings:Section({ Title = "💀 คำสั่งด่วน (Quick Actions)" })
+
+Tabs.Settings:Button({
+    Title = "💀 รีเซ็ทตัวละคร (Reset Character)",
+    Desc = "กดเพื่อฆ่าตัวละครตายแล้วเกิดใหม่ทันที",
+    Callback = function()
+        pcall(function()
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+                LocalPlayer.Character:FindFirstChildOfClass("Humanoid").Health = 0
+            end
+        end)
+    end
+})
+
+Tabs.Settings:Section({ Title = "⚙️ ระบบป้องกัน & เซิร์ฟเวอร์" })
+
+local AntiAfkEnabled = false
+Tabs.Settings:Toggle({
+    Title = "1. เปิดระบบ Anti-AFK (กันโดนเตะ)",
+    Value = false,
+    Callback = function(Value) AntiAfkEnabled = Value end
+})
+
+LocalPlayer.Idled:Connect(function()
+    if AntiAfkEnabled then
+        game:GetService("VirtualUser"):CaptureController()
+        game:GetService("VirtualUser"):ClickButton2(Vector2.new())
+    end
+end)
+
+Tabs.Settings:Button({
+    Title = "2. เข้าเซิร์ฟเดิมใหม่ (Rejoin)",
+    Callback = function() game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer) end
+})
+
+Tabs.Settings:Button({
+    Title = "3. ปิดสคริปต์ทั้งหมด (Destroy)",
+    Callback = function()
+        GodModeEnabled = false
+        if ToggleGui then ToggleGui:Destroy() end
+        if EspScreenGui then EspScreenGui:Destroy() end
+        if SoundService:FindFirstChild("KranClickSound") then SoundService.KranClickSound:Destroy() end
+        for plr, _ in pairs(ESP_Objects) do
+            if ESP_Objects[plr] then
+                for _, obj in pairs(ESP_Objects[plr]) do obj:Remove() end
+            end
+        end
+        pcall(function() Window:Destroy() end)
+    end
+})
+
+-- 🎨 ตั้งค่าระบบไฟ & ขอบเรืองแสง RGB
+Tabs.Settings:Section({ Title = "🎨 ตั้งค่าระบบไฟ & ขอบเรืองแสง RGB" })
+
+Tabs.Settings:Button({
+    Title = "🎨 เปลี่ยนโหมดสี: 🌈 Rainbow (สีรุ้งวิ่งวน)",
+    Desc = "แสดงแถบสีรุ้งวิ่งวน 360 องศารอบขอบเมนู",
+    Callback = function() RGB_Config.Mode = "Rainbow" end
+})
+
+Tabs.Settings:Button({
+    Title = "🟠 เปลี่ยนโหมดสี: Orange (สีส้มสด)",
+    Callback = function() RGB_Config.Mode = "Orange" end
+})
+
+Tabs.Settings:Button({
+    Title = "🟢 เปลี่ยนโหมดสี: Neon Green (เขียวนีออน)",
+    Callback = function() RGB_Config.Mode = "Green" end
+})
+
+Tabs.Settings:Button({
+    Title = "🔵 เปลี่ยนโหมดสี: Cyan (ฟ้าไซแอน)",
+    Callback = function() RGB_Config.Mode = "Cyan" end
+})
+
+Tabs.Settings:Button({
+    Title = "🔴 เปลี่ยนโหมดสี: Red (แดงสด)",
+    Callback = function() RGB_Config.Mode = "Red" end
+})
+
+Tabs.Settings:Button({
+    Title = "💜 เปลี่ยนโหมดสี: Neon Purple (ม่วงนีออน)",
+    Callback = function() RGB_Config.Mode = "Purple" end
+})
+
+Tabs.Settings:Button({
+    Title = "💛 เปลี่ยนโหมดสี: Golden Yellow (ทองคำสว่าง VIP)",
+    Callback = function() RGB_Config.Mode = "Gold" end
+})
+
+Tabs.Settings:Button({
+    Title = "🩷 เปลี่ยนโหมดสี: Neon Pink (ชมพูนีออน)",
+    Callback = function() RGB_Config.Mode = "Pink" end
+})
+
+Tabs.Settings:Button({
+    Title = "❄️ เปลี่ยนโหมดสี: Ice Blue (ฟ้าไอซ์บลู)",
+    Callback = function() RGB_Config.Mode = "IceBlue" end
+})
+
+Tabs.Settings:Button({
+    Title = "⚪ เปลี่ยนโหมดสี: Silver White (ขาวเงินสว่างสด)",
+    Callback = function() RGB_Config.Mode = "White" end
+})
+
+Tabs.Settings:Button({
+    Title = "⚡ ปรับความเร็วไฟวิ่ง: (ช้า ➔ ปกติ ➔ เร็วชิวๆ)",
+    Callback = function()
+        if RGB_Config.Speed == 6 then
+            RGB_Config.Speed = 2
+        elseif RGB_Config.Speed == 2 then
+            RGB_Config.Speed = 4
+        else
+            RGB_Config.Speed = 6
+        end
+    end
+})
+
+Tabs.Settings:Button({
+    Title = "📐 ปรับความหนาขอบไฟ: (บาง ➔ ปกติ ➔ หนา)",
+    Callback = function()
+        if RGB_Config.Size == 3 then
+            RGB_Config.Size = 6
+        elseif RGB_Config.Size == 6 then
+            RGB_Config.Size = 2
+        else
+            RGB_Config.Size = 3
+        end
+        if UIStrokeToggle then UIStrokeToggle.Thickness = RGB_Config.Size end
+        if EspUIStroke then EspUIStroke.Thickness = RGB_Config.Size end
+        
+        for _, gui in pairs(ParentGui:GetChildren()) do
+            if gui:IsA("ScreenGui") then
+                for _, descendant in pairs(gui:GetDescendants()) do
+                    if descendant:IsA("Frame") and descendant.AbsoluteSize.X > 250 then
+                        local stroke = descendant:FindFirstChild("KranMainStroke")
+                        if stroke then stroke.Thickness = RGB_Config.Size end
+                    end
+                end
+            end
+        end
+    end
+})
+
+-- ------------------------------------------------
+-- ⚡ 7. RenderStepped Loop หมุน Gradient 360° วนต่อเนื่อง
+-- ------------------------------------------------
+RunService.RenderStepped:Connect(function()
+    local offset = (tick() * (RGB_Config.Speed * 0.2)) % 1
+    local rotAngle = (tick() * (RGB_Config.Speed * 90)) % 360
+
+    -- 1. หมุนไฟปุ่มลอยดอกจิก ♣️
+    if ToggleGradient then
+        ToggleGradient.Rotation = rotAngle
+        UpdateGradientColors(ToggleGradient, offset)
+    end
+
+    -- 2. หมุนไฟเมนู ESP
+    if EspGradient then
+        EspGradient.Rotation = rotAngle
+        UpdateGradientColors(EspGradient, offset)
+    end
+
+    -- 3. หมุนไฟหน้าต่างหลัก WindUI
+    for _, gui in pairs(ParentGui:GetChildren()) do
+        if gui:IsA("ScreenGui") and (gui.Name:find("WindUI") or gui.Name:find("Wind") or gui:FindFirstChild("Main") or gui:FindFirstChild("Canvas")) then
+            for _, descendant in pairs(gui:GetDescendants()) do
+                if descendant:IsA("Frame") and descendant.AbsoluteSize.X > 250 then
+                    local stroke = descendant:FindFirstChild("KranMainStroke")
+                    if stroke then
+                        local grad = stroke:FindFirstChild("KranMainGradient")
+                        if grad then
+                            grad.Rotation = rotAngle
+                            UpdateGradientColors(grad, offset)
+                        end
+                    end
+                end
+            end
+        end
+    end
+end)
+
+-- ------------------------------------------------
+-- ⚙️ 8. ระบบคำนวณ ESP
+-- ------------------------------------------------
+local function CreateESPForPlayer(plr)
+    if not Drawing then return end
+    local objects = {
+        Box = Drawing.new("Square"),
+        BoxOutline = Drawing.new("Square"),
+        Tracer = Drawing.new("Line")
+    }
+    objects.Box.Color = Color3.fromRGB(255, 50, 50)
+    objects.Box.Thickness = 1.5
+    objects.BoxOutline.Color = Color3.fromRGB(0, 0, 0)
+    objects.BoxOutline.Thickness = 3
+    objects.Tracer.Thickness = 1.5
+    ESP_Objects[plr] = objects
+end
+
+local function RemoveESPForPlayer(plr)
+    if ESP_Objects[plr] then
+        for _, obj in pairs(ESP_Objects[plr]) do obj:Remove() end
+        ESP_Objects[plr] = nil
+    end
+end
+
+local function UpdateESP(plr)
+    if not Drawing then return end
+    if not ESP_Objects[plr] then CreateESPForPlayer(plr) end
+
+    local objs = ESP_Objects[plr]
+    local char = plr.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    local head = char and char:FindFirstChild("Head")
+    local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+
+    if char and hrp and head and humanoid and humanoid.Health > 0 then
+        local headWorldPos = head.Position + Vector3.new(0, 1.2, 0)
+        local legWorldPos = hrp.Position - Vector3.new(0, 3.2, 0)
+
+        local headScreen, headOnScreen = Camera:WorldToViewportPoint(headWorldPos)
+        local legScreen, legOnScreen = Camera:WorldToViewportPoint(legWorldPos)
+
+        if headOnScreen or legOnScreen then
+            local boxHeight = math.abs(headScreen.Y - legScreen.Y)
+            local boxWidth = boxHeight / 1.6
+            local boxPos = Vector2.new(headScreen.X - boxWidth / 2, headScreen.Y)
+
+            if Box_Enabled then
+                objs.BoxOutline.Position = boxPos
+                objs.BoxOutline.Size = Vector2.new(boxWidth, boxHeight)
+                objs.BoxOutline.Visible = true
+
+                objs.Box.Position = boxPos
+                objs.Box.Size = Vector2.new(boxWidth, boxHeight)
+                objs.Box.Visible = true
+            else
+                objs.Box.Visible = false
+                objs.BoxOutline.Visible = false
+            end
+
+            if Tracers_Enabled then
+                objs.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                objs.Tracer.To = Vector2.new(headScreen.X, legScreen.Y)
+                objs.Tracer.Color = Color3.fromHSV((tick() * 0.5) % 1, 0.9, 1)
+                objs.Tracer.Visible = true
+            else
+                objs.Tracer.Visible = false
+            end
+            return
+        end
+    end
+
+    objs.Box.Visible = false
+    objs.BoxOutline.Visible = false
+    objs.Tracer.Visible = false
+end
+
+Players.PlayerRemoving:Connect(RemoveESPForPlayer)
+
+RunService.RenderStepped:Connect(function()
+    for _, v in pairs(Players:GetPlayers()) do
+        if v ~= LocalPlayer then
+            UpdateESP(v)
+        end
+    end
+end)
+
+pcall(function()
+    WindUI:Notify({
+        Title = "♣️ ALL MENU BY KRAN",
+        Content = "โหลดสคริปต์ไฟ RGB วิ่งเร็วขอบเรืองแสงเรียบร้อยแล้ว! 🔥✨",
+        Duration = 3
+    })
+end)
